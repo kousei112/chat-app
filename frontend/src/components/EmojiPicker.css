@@ -1,0 +1,142 @@
+.emoji-picker-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.emoji-picker {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 400px;
+  margin: 0 auto;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.emoji-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 20px 20px 0 0;
+}
+
+.emoji-header span {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+
+.close-emoji {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.close-emoji:hover {
+  background: #e0e0e0;
+}
+
+.emoji-grid {
+  padding: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+  gap: 5px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.emoji-item {
+  width: 45px;
+  height: 45px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emoji-item:hover {
+  background: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.emoji-item:active {
+  transform: scale(0.95);
+}
+
+/* Scrollbar */
+.emoji-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.emoji-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.emoji-grid::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.emoji-grid::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .emoji-picker {
+    max-height: 50vh;
+  }
+  
+  .emoji-grid {
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  }
+  
+  .emoji-item {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+}
