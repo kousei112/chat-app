@@ -1,3 +1,204 @@
+/* ... Giữ nguyên CSS cũ và thêm các style mới ... */
+
+.message-input-area {
+  padding: 15px 20px;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.action-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action-btn:hover {
+  background: #f0f0f0;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.message-input-area input[type="text"] {
+  flex: 1;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 25px;
+  font-size: 15px;
+  transition: border-color 0.3s;
+}
+
+.message-input-area input[type="text"]:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.message-input-area button[type="submit"] {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.message-input-area button[type="submit"]:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.message-input-area button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Message with image */
+.message-image {
+  max-width: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.message-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.2s;
+}
+
+.message-image img:hover {
+  transform: scale(1.02);
+}
+
+.message-bubble.sent .message-image {
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble.received .message-image {
+  border-bottom-left-radius: 4px;
+}
+
+/* Message with file */
+.message-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  min-width: 250px;
+}
+
+.message-bubble.received .message-file {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.file-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.file-download {
+  font-size: 20px;
+  text-decoration: none;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.file-download:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.message-bubble.received .file-download:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Uploading indicator */
+.uploading-indicator {
+  padding: 10px 20px;
+  background: #f0f7ff;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #667eea;
+  font-size: 14px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* No messages state */
+.no-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #999;
+  gap: 10px;
+}
+
+.no-messages p {
+  font-size: 16px;
+  margin: 0;
+}
+
+.no-messages small {
+  font-size: 14px;
+}
+
+/* Empty state */
 .no-conversation-selected {
   flex: 1;
   display: flex;
@@ -18,20 +219,28 @@
 
 .empty-state p {
   font-size: 18px;
-  margin: 0;
+  margin: 0 0 10px 0;
 }
 
+.empty-state small {
+  font-size: 14px;
+  color: #bbb;
+}
+
+/* Chat window */
 .private-chat-window {
   flex: 1;
   display: flex;
   flex-direction: column;
   background: white;
+  height: 100%;
 }
 
 .chat-window-header {
   padding: 20px;
   border-bottom: 1px solid #e0e0e0;
   background: white;
+  flex-shrink: 0;
 }
 
 .header-user-info {
@@ -51,6 +260,7 @@
   justify-content: center;
   font-size: 20px;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 .header-user-details {
@@ -122,6 +332,7 @@
   border-radius: 18px;
   word-wrap: break-word;
   line-height: 1.5;
+  font-size: 15px;
 }
 
 .message-bubble.sent .message-content {
@@ -172,6 +383,7 @@
   font-size: 14px;
   background: white;
   border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }
 
 .typing-dots {
@@ -188,48 +400,6 @@
   100% {
     opacity: 0;
   }
-}
-
-.message-input-area {
-  padding: 20px;
-  background: white;
-  border-top: 1px solid #e0e0e0;
-  display: flex;
-  gap: 10px;
-}
-
-.message-input-area input {
-  flex: 1;
-  padding: 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 25px;
-  font-size: 16px;
-  transition: border-color 0.3s;
-}
-
-.message-input-area input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.message-input-area button {
-  padding: 15px 30px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 25px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.message-input-area button:hover:not(:disabled) {
-  transform: scale(1.05);
-}
-
-.message-input-area button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Scrollbar */
@@ -263,4 +433,46 @@
   .messages-area {
     padding: 15px;
   }
+
+  .message-image {
+    max-width: 250px;
+  }
+}
+
+/* Thêm vào file PrivateChatWindow.css */
+
+/* Tên người gửi trong group chat */
+.sender-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 4px;
+  padding: 0 5px;
+}
+
+.message-bubble.received .sender-name {
+  color: #667eea;
+}
+
+.message-bubble.sent .sender-name {
+  display: none; /* Không hiện tên cho tin nhắn của bản thân */
+}
+
+/* Group header avatar với màu khác */
+.header-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.header-avatar.group-header-avatar {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }

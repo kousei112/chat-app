@@ -76,6 +76,16 @@
   font-weight: bold;
 }
 
+.avatar-circle.group-avatar {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.member-count {
+  font-size: 13px;
+  color: #999;
+  font-weight: normal;
+}
+
 .online-badge {
   position: absolute;
   bottom: 2px;

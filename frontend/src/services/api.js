@@ -52,4 +52,32 @@ export const conversationAPI = {
   deleteConversation: (conversationId) => api.delete(`/conversations/${conversationId}`)
 };
 
+// Upload APIs
+export const uploadAPI = {
+  uploadFile: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/upload/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
+};
+
+// Group APIs
+export const groupAPI = {
+  createGroup: (data) => api.post('/groups/create', data),
+  getGroupInfo: (conversationId) => api.get(`/groups/${conversationId}`),
+  addMembers: (conversationId, memberIds) => 
+    api.post(`/groups/${conversationId}/add-members`, { memberIds }),
+  removeMember: (conversationId, memberId) => 
+    api.post(`/groups/${conversationId}/remove-member`, { memberId }),
+  leaveGroup: (conversationId) => api.post(`/groups/${conversationId}/leave`),
+  updateGroupName: (conversationId, groupName) => 
+    api.put(`/groups/${conversationId}/name`, { groupName }),
+  promoteToAdmin: (conversationId, memberId) => 
+    api.post(`/groups/${conversationId}/promote`, { memberId })
+};
+
 export default api;

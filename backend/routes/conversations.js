@@ -15,39 +15,45 @@ router.get('/', authMiddleware, async (req, res) => {
         SELECT 
           c.conversation_id,
           c.conversation_type,
+          c.group_name,
+          c.group_avatar_url,
           DATEADD(HOUR, 7, c.updated_at) as updated_at,
-          -- Lấy thông tin người chat (user khác trong conversation)
+          -- Thông tin cho private chat
           other_user.user_id as other_user_id,
           other_user.username as other_username,
           other_user.display_name as other_display_name,
           other_user.full_name as other_full_name,
           other_user.avatar_url as other_avatar_url,
           other_user.is_online as other_is_online,
-          -- Tin nhắn cuối cùng
+          -- Thông tin chung
           last_msg.message_text as last_message,
           DATEADD(HOUR, 7, last_msg.created_at) as last_message_time,
           last_msg.sender_id as last_sender_id,
-          -- Số tin nhắn chưa đọc
           (SELECT COUNT(*) 
            FROM Messages m2 
            WHERE m2.conversation_id = c.conversation_id 
              AND m2.receiver_id = @user_id 
              AND m2.is_read = 0
              AND m2.is_deleted = 0
-          ) as unread_count
+          ) as unread_count,
+          -- Thông tin group
+          (SELECT COUNT(*) 
+           FROM ConversationParticipants 
+           WHERE conversation_id = c.conversation_id AND is_active = 1
+          ) as member_count
         FROM Conversations c
         INNER JOIN ConversationParticipants cp ON c.conversation_id = cp.conversation_id
-        INNER JOIN ConversationParticipants cp_other ON c.conversation_id = cp_other.conversation_id
-        INNER JOIN Users other_user ON cp_other.user_id = other_user.user_id
+        LEFT JOIN ConversationParticipants cp_other ON c.conversation_id = cp_other.conversation_id 
+          AND cp_other.user_id != @user_id 
+          AND c.conversation_type = 'private'
+        LEFT JOIN Users other_user ON cp_other.user_id = other_user.user_id
         OUTER APPLY (
           SELECT TOP 1 message_text, created_at, sender_id
           FROM Messages
           WHERE conversation_id = c.conversation_id AND is_deleted = 0
           ORDER BY created_at DESC
         ) last_msg
-        WHERE cp.user_id = @user_id 
-          AND cp_other.user_id != @user_id
-          AND cp.is_active = 1
+        WHERE cp.user_id = @user_id AND cp.is_active = 1
         ORDER BY c.updated_at DESC
       `);
 

@@ -12,6 +12,7 @@ const messageRoutes = require('./routes/messages');
 const userRoutes = require('./routes/users');
 const conversationRoutes = require('./routes/conversations');
 const uploadRoutes = require('./routes/upload');
+const groupRoutes = require('./routes/groups');
 
 const app = express();
 const server = http.createServer(app);
@@ -34,6 +35,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/groups', groupRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

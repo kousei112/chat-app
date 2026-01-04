@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { conversationAPI } from '../services/api';
+import { conversationAPI, groupAPI } from '../services/api';
 import { authAPI } from '../services/api';
 import ConversationList from './ConversationList';
 import PrivateChatWindow from './PrivateChatWindow';
 import UserList from './UserList';
 import UserProfile from './UserProfile';
+import CreateGroupModal from './CreateGroupModal';
 import './MessagingApp.css';
 
 function MessagingApp({ socket, user, onLogout }) {
@@ -12,12 +13,12 @@ function MessagingApp({ socket, user, onLogout }) {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showUserList, setShowUserList] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
 
   useEffect(() => {
     loadConversations();
 
-    // Socket listeners
     socket.on('receive-private-message', handleNewMessage);
     socket.on('new-message-notification', handleNotification);
 
@@ -39,12 +40,10 @@ function MessagingApp({ socket, user, onLogout }) {
   };
 
   const handleNewMessage = (message) => {
-    // Reload conversations để cập nhật last message
     loadConversations();
   };
 
   const handleNotification = (data) => {
-    // Show notification nếu cần
     console.log('New message from:', data.senderName);
     loadConversations();
   };
@@ -56,6 +55,25 @@ function MessagingApp({ socket, user, onLogout }) {
   const handleSelectUser = (newConversation) => {
     setSelectedConversation(newConversation);
     loadConversations();
+  };
+
+  const handleCreateGroup = async (groupData) => {
+    try {
+      const response = await groupAPI.createGroup(groupData);
+      if (response.data.success) {
+        loadConversations();
+        // Auto-select group vừa tạo
+        const newGroup = response.data.data;
+        setSelectedConversation({
+          conversation_id: newGroup.conversation_id,
+          conversation_type: 'group',
+          group_name: newGroup.group_name,
+          member_count: newGroup.member_count
+        });
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
   const handleProfileUpdate = (updatedUser) => {
@@ -95,6 +113,13 @@ function MessagingApp({ socket, user, onLogout }) {
               title="Chat mới"
             >
               ➕
+            </button>
+            <button 
+              className="icon-btn new-group-btn" 
+              onClick={() => setShowCreateGroup(true)}
+              title="Tạo nhóm"
+            >
+              👥
             </button>
           </div>
         </div>
@@ -146,6 +171,13 @@ function MessagingApp({ socket, user, onLogout }) {
           user={currentUser}
           onUpdate={handleProfileUpdate}
           onClose={() => setShowProfile(false)}
+        />
+      )}
+
+      {showCreateGroup && (
+        <CreateGroupModal
+          onClose={() => setShowCreateGroup(false)}
+          onCreate={handleCreateGroup}
         />
       )}
     </div>
