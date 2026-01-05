@@ -487,4 +487,60 @@ router.post('/:conversationId/promote', authMiddleware, async (req, res) => {
   }
 });
 
+// Upload avatar cho group
+router.post('/:conversationId/upload-avatar', authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { conversationId } = req.params;
+    const { avatarUrl } = req.body;
+
+    if (!avatarUrl) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Thiếu URL avatar' 
+      });
+    }
+
+    const pool = await getPool();
+
+    // Kiểm tra quyền admin
+    const roleCheck = await pool.request()
+      .input('conversation_id', sql.Int, conversationId)
+      .input('user_id', sql.Int, userId)
+      .query(`
+        SELECT role FROM ConversationParticipants 
+        WHERE conversation_id = @conversation_id AND user_id = @user_id AND is_active = 1
+      `);
+
+    if (roleCheck.recordset.length === 0 || roleCheck.recordset[0].role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Chỉ admin mới có thể thay đổi ảnh nhóm' 
+      });
+    }
+
+    // Cập nhật avatar
+    await pool.request()
+      .input('conversation_id', sql.Int, conversationId)
+      .input('group_avatar_url', sql.NVarChar, avatarUrl)
+      .query(`
+        UPDATE Conversations 
+        SET group_avatar_url = @group_avatar_url, updated_at = GETDATE()
+        WHERE conversation_id = @conversation_id
+      `);
+
+    res.json({
+      success: true,
+      message: 'Đã cập nhật ảnh nhóm'
+    });
+
+  } catch (error) {
+    console.error('Lỗi upload group avatar:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Lỗi server' 
+    });
+  }
+});
+
 module.exports = router;

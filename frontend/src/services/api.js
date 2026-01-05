@@ -39,7 +39,8 @@ export const userAPI = {
   getProfile: () => api.get('/users/profile'),
   completeProfile: (profileData) => api.post('/users/complete-profile', profileData),
   updateProfile: (profileData) => api.put('/users/profile', profileData),
-  getAllUsers: () => api.get('/users/all')
+  getAllUsers: () => api.get('/users/all'),
+  uploadAvatar: (avatarUrl) => api.post('/users/upload-avatar', { avatarUrl })
 };
 
 // Conversation APIs
@@ -77,7 +78,9 @@ export const groupAPI = {
   updateGroupName: (conversationId, groupName) => 
     api.put(`/groups/${conversationId}/name`, { groupName }),
   promoteToAdmin: (conversationId, memberId) => 
-    api.post(`/groups/${conversationId}/promote`, { memberId })
+    api.post(`/groups/${conversationId}/promote`, { memberId }),
+  uploadGroupAvatar: (conversationId, avatarUrl) => 
+    api.post(`/groups/${conversationId}/upload-avatar`, { avatarUrl })
 };
 
 export default api;

@@ -269,4 +269,50 @@ router.get('/all', authMiddleware, async (req, res) => {
   }
 });
 
+// Upload avatar cho user
+router.post('/upload-avatar', authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { avatarUrl } = req.body;
+
+    if (!avatarUrl) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Thiếu URL avatar' 
+      });
+    }
+
+    const pool = await getPool();
+
+    const result = await pool.request()
+      .input('user_id', sql.Int, userId)
+      .input('avatar_url', sql.NVarChar, avatarUrl)
+      .query(`
+        UPDATE Users 
+        SET avatar_url = @avatar_url
+        OUTPUT 
+          INSERTED.user_id,
+          INSERTED.username,
+          INSERTED.email,
+          INSERTED.display_name,
+          INSERTED.full_name,
+          INSERTED.avatar_url
+        WHERE user_id = @user_id
+      `);
+
+    res.json({
+      success: true,
+      message: 'Cập nhật avatar thành công',
+      data: result.recordset[0]
+    });
+
+  } catch (error) {
+    console.error('Lỗi upload avatar:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Lỗi server' 
+    });
+  }
+});
+
 module.exports = router;
