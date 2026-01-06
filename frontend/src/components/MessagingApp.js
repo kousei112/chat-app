@@ -7,6 +7,7 @@ import UserList from './UserList';
 import UserProfile from './UserProfile';
 import CreateGroupModal from './CreateGroupModal';
 import ThemeToggle from './ThemeToggle';
+import NotificationManager from './NotificationManager';
 import './MessagingApp.css';
 
 function MessagingApp({ socket, user, onLogout }) {
@@ -92,6 +93,18 @@ function MessagingApp({ socket, user, onLogout }) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       onLogout();
+    }
+  };
+
+  const handleNotificationClick = (data) => {
+    const conversation = conversations.find(
+      c => c.conversation_id === data.conversationId
+    );
+    
+    if (conversation) {
+      setSelectedConversation(conversation);
+    } else {
+      loadConversations();
     }
   };
 
@@ -182,6 +195,13 @@ function MessagingApp({ socket, user, onLogout }) {
           onCreate={handleCreateGroup}
         />
       )}
+
+      {/* NOTIFICATION MANAGER */}
+      <NotificationManager
+        socket={socket}
+        currentUser={currentUser}
+        onNotificationClick={handleNotificationClick}
+      />
     </div>
   );
 }
