@@ -3,6 +3,8 @@ import { conversationAPI, uploadAPI, reactionAPI } from '../services/api';
 import EmojiPicker from './EmojiPicker';
 import ReactionPicker from './ReactionPicker';
 import Avatar from './Avatar';
+import SearchMessages from './SearchMessages';
+import MediaGallery from './MediaGallery';
 import './PrivateChatWindow.css';
 
 function PrivateChatWindow({ socket, conversation, currentUser }) {
@@ -12,6 +14,8 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showMedia, setShowMedia] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -250,7 +254,6 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     const isGroupChat = conversation.conversation_type === 'group';
     const senderName = msg.sender_full_name || msg.sender_display_name || msg.sender_username;
 
-    // Sender info với Avatar
     const renderSenderInfo = () => {
       if (!isGroupChat || isSent) return null;
       
@@ -460,6 +463,23 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
             </div>
           </div>
         </div>
+
+        <div className="header-actions">
+          <button
+            className="header-action-btn"
+            onClick={() => setShowSearch(true)}
+            title="Tìm kiếm"
+          >
+            🔍
+          </button>
+          <button
+            className="header-action-btn"
+            onClick={() => setShowMedia(true)}
+            title="Ảnh & File"
+          >
+            📁
+          </button>
+        </div>
       </div>
 
       <div className="messages-area">
@@ -533,6 +553,23 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
         <EmojiPicker
           onSelect={handleEmojiSelect}
           onClose={() => setShowEmojiPicker(false)}
+        />
+      )}
+
+      {showSearch && (
+        <SearchMessages
+          conversation={conversation}
+          onClose={() => setShowSearch(false)}
+          onSelectMessage={(messageId) => {
+            console.log('Selected message:', messageId);
+          }}
+        />
+      )}
+
+      {showMedia && (
+        <MediaGallery
+          conversation={conversation}
+          onClose={() => setShowMedia(false)}
         />
       )}
     </div>

@@ -51,7 +51,11 @@ export const conversationAPI = {
   getMessages: (conversationId, limit = 50, offset = 0) => 
     api.get(`/conversations/${conversationId}/messages?limit=${limit}&offset=${offset}`),
   markAsRead: (conversationId) => api.post(`/conversations/${conversationId}/mark-read`),
-  deleteConversation: (conversationId) => api.delete(`/conversations/${conversationId}`)
+  deleteConversation: (conversationId) => api.delete(`/conversations/${conversationId}`),
+  searchMessages: (conversationId, keyword) => 
+    api.get(`/conversations/${conversationId}/search?keyword=${encodeURIComponent(keyword)}`),
+  getMedia: (conversationId, type = 'all') => 
+    api.get(`/conversations/${conversationId}/media?type=${type}`)
 };
 
 // Upload APIs
