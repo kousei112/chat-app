@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { conversationAPI, uploadAPI, reactionAPI } from '../services/api';
 import EmojiPicker from './EmojiPicker';
 import ReactionPicker from './ReactionPicker';
+import Avatar from './Avatar';
 import './PrivateChatWindow.css';
 
 function PrivateChatWindow({ socket, conversation, currentUser }) {
@@ -249,13 +250,32 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     const isGroupChat = conversation.conversation_type === 'group';
     const senderName = msg.sender_full_name || msg.sender_display_name || msg.sender_username;
 
+    // Sender info với Avatar
+    const renderSenderInfo = () => {
+      if (!isGroupChat || isSent) return null;
+      
+      return (
+        <div className="message-sender-info">
+          <Avatar 
+            user={{
+              avatar_url: msg.sender_avatar_url,
+              full_name: msg.sender_full_name,
+              display_name: msg.sender_display_name,
+              username: msg.sender_username
+            }}
+            size="small"
+            className="message-avatar"
+          />
+          <div className="sender-name">{senderName}</div>
+        </div>
+      );
+    };
+
     if (msg.message_type === 'image' && msg.file_url) {
       return (
         <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
           <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
-            {isGroupChat && !isSent && (
-              <div className="sender-name">{senderName}</div>
-            )}
+            {renderSenderInfo()}
             <div className="message-image">
               <img 
                 src={`http://localhost:5000${msg.file_url}`} 
@@ -295,9 +315,7 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
       return (
         <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
           <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
-            {isGroupChat && !isSent && (
-              <div className="sender-name">{senderName}</div>
-            )}
+            {renderSenderInfo()}
             <div className="message-file">
               <div className="file-icon">📎</div>
               <div className="file-info">
@@ -342,9 +360,7 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     return (
       <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
         <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
-          {isGroupChat && !isSent && (
-            <div className="sender-name">{senderName}</div>
-          )}
+          {renderSenderInfo()}
           <div className="message-content">{msg.message_text}</div>
           <div className="message-meta">
             <span className="message-time">{formatTime(msg.created_at)}</span>
@@ -377,15 +393,11 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     if (conversation.conversation_type === 'group') {
       return {
         name: conversation.group_name || 'Nhóm chat',
-        avatar: conversation.group_name ? conversation.group_name.charAt(0).toUpperCase() : '👥',
-        status: `${conversation.member_count || 0} thành viên`,
-        isOnline: false,
         isGroup: true
       };
     } else {
       return {
         name: conversation.other_full_name || conversation.other_display_name || conversation.other_username || 'User',
-        avatar: (conversation.other_full_name || conversation.other_username || 'U').charAt(0).toUpperCase(),
         status: conversation.other_is_online ? 'Online' : 'Offline',
         isOnline: conversation.other_is_online,
         isGroup: false
@@ -411,16 +423,34 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     <div className="private-chat-window">
       <div className="chat-window-header">
         <div className="header-user-info">
-          <div className={`header-avatar ${headerInfo.isGroup ? 'group-header-avatar' : ''}`}>
-            {headerInfo.avatar}
-          </div>
+          {headerInfo.isGroup ? (
+            <Avatar
+              user={{
+                avatar_url: conversation.group_avatar_url,
+                full_name: conversation.group_name
+              }}
+              size="large"
+              className="group-avatar"
+            />
+          ) : (
+            <Avatar
+              user={{
+                avatar_url: conversation.other_avatar_url,
+                full_name: conversation.other_full_name,
+                display_name: conversation.other_display_name,
+                username: conversation.other_username
+              }}
+              size="large"
+            />
+          )}
+          
           <div className="header-user-details">
             <div className="header-user-name">
               {headerInfo.name}
             </div>
             <div className="header-user-status">
               {headerInfo.isGroup ? (
-                <>{headerInfo.status}</>
+                <>{conversation.member_count || 0} thành viên</>
               ) : (
                 <>
                   <span className={`status-dot ${headerInfo.isOnline ? 'online' : ''}`}></span>

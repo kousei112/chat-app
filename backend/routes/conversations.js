@@ -328,4 +328,155 @@ router.delete('/:conversationId', authMiddleware, async (req, res) => {
   }
 });
 
+// Tìm kiếm tin nhắn trong conversation
+router.get('/:conversationId/search', authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { conversationId } = req.params;
+    const { keyword } = req.query;
+
+    if (!keyword || keyword.trim().length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Thiếu từ khóa tìm kiếm' 
+      });
+    }
+
+    const pool = await getPool();
+
+    // Kiểm tra quyền truy cập
+    const memberCheck = await pool.request()
+      .input('conversation_id', sql.Int, conversationId)
+      .input('user_id', sql.Int, userId)
+      .query(`
+        SELECT participant_id 
+        FROM ConversationParticipants 
+        WHERE conversation_id = @conversation_id AND user_id = @user_id AND is_active = 1
+      `);
+
+    if (memberCheck.recordset.length === 0) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Bạn không có quyền truy cập' 
+      });
+    }
+
+    // Tìm kiếm tin nhắn
+    const result = await pool.request()
+      .input('conversation_id', sql.Int, conversationId)
+      .input('keyword', sql.NVarChar, `%${keyword}%`)
+      .query(`
+        SELECT TOP 50
+          m.message_id,
+          m.message_text,
+          m.message_type,
+          m.sender_id,
+          DATEADD(HOUR, 7, m.created_at) as created_at,
+          sender.username as sender_username,
+          sender.display_name as sender_display_name,
+          sender.full_name as sender_full_name,
+          sender.avatar_url as sender_avatar_url
+        FROM Messages m
+        INNER JOIN Users sender ON m.sender_id = sender.user_id
+        WHERE m.conversation_id = @conversation_id 
+          AND m.is_deleted = 0
+          AND m.message_text LIKE @keyword
+        ORDER BY m.created_at DESC
+      `);
+
+    res.json({
+      success: true,
+      data: {
+        results: result.recordset,
+        count: result.recordset.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Lỗi search messages:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Lỗi server' 
+    });
+  }
+});
+
+// Lấy media (ảnh/file) trong conversation
+router.get('/:conversationId/media', authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { conversationId } = req.params;
+    const { type = 'all' } = req.query; // 'all', 'image', 'file'
+
+    const pool = await getPool();
+
+    // Kiểm tra quyền truy cập
+    const memberCheck = await pool.request()
+      .input('conversation_id', sql.Int, conversationId)
+      .input('user_id', sql.Int, userId)
+      .query(`
+        SELECT participant_id 
+        FROM ConversationParticipants 
+        WHERE conversation_id = @conversation_id AND user_id = @user_id AND is_active = 1
+      `);
+
+    if (memberCheck.recordset.length === 0) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Bạn không có quyền truy cập' 
+      });
+    }
+
+    // Build query based on type
+    let typeCondition = '';
+    if (type === 'image') {
+      typeCondition = "AND m.message_type = 'image'";
+    } else if (type === 'file') {
+      typeCondition = "AND m.message_type = 'file'";
+    } else {
+      typeCondition = "AND m.message_type IN ('image', 'file')";
+    }
+
+    const result = await pool.request()
+      .input('conversation_id', sql.Int, conversationId)
+      .query(`
+        SELECT 
+          m.message_id,
+          m.message_text,
+          m.message_type,
+          m.sender_id,
+          m.file_url,
+          m.file_name,
+          m.file_size,
+          m.file_type,
+          DATEADD(HOUR, 7, m.created_at) as created_at,
+          sender.username as sender_username,
+          sender.display_name as sender_display_name,
+          sender.full_name as sender_full_name,
+          sender.avatar_url as sender_avatar_url
+        FROM Messages m
+        INNER JOIN Users sender ON m.sender_id = sender.user_id
+        WHERE m.conversation_id = @conversation_id 
+          AND m.is_deleted = 0
+          ${typeCondition}
+        ORDER BY m.created_at DESC
+      `);
+
+    res.json({
+      success: true,
+      data: {
+        media: result.recordset,
+        count: result.recordset.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Lỗi lấy media:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Lỗi server' 
+    });
+  }
+});
+
 module.exports = router;
