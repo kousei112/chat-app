@@ -83,4 +83,14 @@ export const groupAPI = {
     api.post(`/groups/${conversationId}/upload-avatar`, { avatarUrl })
 };
 
+// Reaction APIs
+export const reactionAPI = {
+  addReaction: (messageId, emoji) => 
+    api.post(`/reactions/${messageId}/react`, { emoji }),
+  removeReaction: (messageId, emoji) => 
+    api.delete(`/reactions/${messageId}/react`, { data: { emoji } }),
+  getReactions: (messageId) => 
+    api.get(`/reactions/${messageId}/reactions`)
+};
+
 export default api;

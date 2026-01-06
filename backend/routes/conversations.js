@@ -214,10 +214,46 @@ router.get('/:conversationId/messages', authMiddleware, async (req, res) => {
         FETCH NEXT @limit ROWS ONLY
       `);
 
+    // Lấy reactions cho từng tin nhắn
+    const messageIds = messages.recordset.map(m => m.message_id);
+    let reactionsMap = {};
+
+    if (messageIds.length > 0) {
+      const reactionsResult = await pool.request()
+        .query(`
+          SELECT 
+            message_id,
+            emoji,
+            COUNT(*) as count,
+            STRING_AGG(CAST(user_id AS NVARCHAR(MAX)), ',') as user_ids
+          FROM MessageReactions
+          WHERE message_id IN (${messageIds.join(',')})
+          GROUP BY message_id, emoji
+        `);
+
+      // Tạo map reactions theo message_id
+      reactionsResult.recordset.forEach(r => {
+        if (!reactionsMap[r.message_id]) {
+          reactionsMap[r.message_id] = [];
+        }
+        reactionsMap[r.message_id].push({
+          emoji: r.emoji,
+          count: r.count,
+          userIds: r.user_ids ? r.user_ids.split(',').map(id => parseInt(id)) : []
+        });
+      });
+    }
+
+    // Thêm reactions vào messages
+    const messagesWithReactions = messages.recordset.map(msg => ({
+      ...msg,
+      reactions: reactionsMap[msg.message_id] || []
+    }));
+
     res.json({
       success: true,
       data: {
-        messages: messages.recordset.reverse()
+        messages: messagesWithReactions.reverse()
       }
     });
 

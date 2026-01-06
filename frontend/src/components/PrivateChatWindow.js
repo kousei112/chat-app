@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { conversationAPI, uploadAPI } from '../services/api';
+import { conversationAPI, uploadAPI, reactionAPI } from '../services/api';
 import EmojiPicker from './EmojiPicker';
+import ReactionPicker from './ReactionPicker';
 import './PrivateChatWindow.css';
 
 function PrivateChatWindow({ socket, conversation, currentUser }) {
@@ -9,6 +10,7 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
   const [typingUser, setTypingUser] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -30,11 +32,13 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     socket.on('receive-private-message', handleReceiveMessage);
     socket.on('user-typing', handleUserTyping);
     socket.on('user-stop-typing', handleStopTyping);
+    socket.on('message-reaction-update', handleReactionUpdate);
 
     return () => {
       socket.off('receive-private-message', handleReceiveMessage);
       socket.off('user-typing', handleUserTyping);
       socket.off('user-stop-typing', handleStopTyping);
+      socket.off('message-reaction-update', handleReactionUpdate);
     };
   }, [conversation]);
 
@@ -68,6 +72,44 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
   const handleStopTyping = (data) => {
     if (data.conversationId === conversation.conversation_id) {
       setTypingUser(null);
+    }
+  };
+
+  const handleReactionUpdate = (data) => {
+    if (data.conversationId === conversation.conversation_id) {
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.message_id === data.messageId 
+            ? { ...msg, reactions: data.reactions }
+            : msg
+        )
+      );
+    }
+  };
+
+  const handleReaction = async (messageId, emoji) => {
+    try {
+      const response = await reactionAPI.addReaction(messageId, emoji);
+      
+      if (response.data.success) {
+        const updatedReactions = response.data.data.reactions;
+        
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.message_id === messageId 
+              ? { ...msg, reactions: updatedReactions }
+              : msg
+          )
+        );
+        
+        socket.emit('message-reaction', {
+          conversationId: conversation.conversation_id,
+          messageId,
+          reactions: updatedReactions
+        });
+      }
+    } catch (error) {
+      console.error('Lỗi thả reaction:', error);
     }
   };
 
@@ -179,6 +221,29 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const renderReactions = (msg) => {
+    if (!msg.reactions || msg.reactions.length === 0) return null;
+
+    return (
+      <div className="message-reactions">
+        {msg.reactions.map((reaction, idx) => {
+          const isReactedByMe = reaction.userIds.includes(currentUser.userId);
+          return (
+            <button
+              key={idx}
+              className={`reaction-item ${isReactedByMe ? 'reacted-by-me' : ''}`}
+              onClick={() => handleReaction(msg.message_id, reaction.emoji)}
+              title={`${reaction.count} người`}
+            >
+              <span className="reaction-emoji">{reaction.emoji}</span>
+              <span className="reaction-count">{reaction.count}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderMessage = (msg) => {
     const isSent = msg.sender_id === currentUser.userId;
     const isGroupChat = conversation.conversation_type === 'group';
@@ -186,68 +251,122 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
 
     if (msg.message_type === 'image' && msg.file_url) {
       return (
-        <div key={msg.message_id} className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
-          {isGroupChat && !isSent && (
-            <div className="sender-name">{senderName}</div>
-          )}
-          <div className="message-image">
-            <img 
-              src={`http://localhost:5000${msg.file_url}`} 
-              alt={msg.file_name}
-              onClick={() => window.open(`http://localhost:5000${msg.file_url}`, '_blank')}
-            />
+        <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
+          <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
+            {isGroupChat && !isSent && (
+              <div className="sender-name">{senderName}</div>
+            )}
+            <div className="message-image">
+              <img 
+                src={`http://localhost:5000${msg.file_url}`} 
+                alt={msg.file_name}
+                onClick={() => window.open(`http://localhost:5000${msg.file_url}`, '_blank')}
+              />
+            </div>
+            {msg.message_text && msg.message_text !== msg.file_name && (
+              <div className="message-content">{msg.message_text}</div>
+            )}
+            <div className="message-meta">
+              <span className="message-time">{formatTime(msg.created_at)}</span>
+              {isSent && msg.is_read && <span className="read-indicator">✓✓</span>}
+            </div>
+            
+            <button 
+              className="add-reaction-btn"
+              onClick={() => setShowReactionPicker(msg.message_id)}
+            >
+              😊+
+            </button>
+            
+            {showReactionPicker === msg.message_id && (
+              <ReactionPicker
+                onSelect={(emoji) => handleReaction(msg.message_id, emoji)}
+                onClose={() => setShowReactionPicker(null)}
+                position={isSent ? 'top' : 'bottom'}
+              />
+            )}
           </div>
-          {msg.message_text && msg.message_text !== msg.file_name && (
-            <div className="message-content">{msg.message_text}</div>
-          )}
-          <div className="message-meta">
-            <span className="message-time">{formatTime(msg.created_at)}</span>
-            {isSent && msg.is_read && <span className="read-indicator">✓✓</span>}
-          </div>
+          {renderReactions(msg)}
         </div>
       );
     }
 
     if (msg.message_type === 'file' && msg.file_url) {
       return (
-        <div key={msg.message_id} className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
-          {isGroupChat && !isSent && (
-            <div className="sender-name">{senderName}</div>
-          )}
-          <div className="message-file">
-            <div className="file-icon">📎</div>
-            <div className="file-info">
-              <div className="file-name">{msg.file_name}</div>
-              <div className="file-size">{formatFileSize(msg.file_size)}</div>
+        <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
+          <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
+            {isGroupChat && !isSent && (
+              <div className="sender-name">{senderName}</div>
+            )}
+            <div className="message-file">
+              <div className="file-icon">📎</div>
+              <div className="file-info">
+                <div className="file-name">{msg.file_name}</div>
+                <div className="file-size">{formatFileSize(msg.file_size)}</div>
+              </div>
+              <a 
+                href={`http://localhost:5000${msg.file_url}`} 
+                download={msg.file_name}
+                className="file-download"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ⬇️
+              </a>
             </div>
-            <a 
-              href={`http://localhost:5000${msg.file_url}`} 
-              download={msg.file_name}
-              className="file-download"
-              target="_blank"
-              rel="noopener noreferrer"
+            <div className="message-meta">
+              <span className="message-time">{formatTime(msg.created_at)}</span>
+              {isSent && msg.is_read && <span className="read-indicator">✓✓</span>}
+            </div>
+            
+            <button 
+              className="add-reaction-btn"
+              onClick={() => setShowReactionPicker(msg.message_id)}
             >
-              ⬇️
-            </a>
+              😊+
+            </button>
+            
+            {showReactionPicker === msg.message_id && (
+              <ReactionPicker
+                onSelect={(emoji) => handleReaction(msg.message_id, emoji)}
+                onClose={() => setShowReactionPicker(null)}
+                position={isSent ? 'top' : 'bottom'}
+              />
+            )}
           </div>
-          <div className="message-meta">
-            <span className="message-time">{formatTime(msg.created_at)}</span>
-            {isSent && msg.is_read && <span className="read-indicator">✓✓</span>}
-          </div>
+          {renderReactions(msg)}
         </div>
       );
     }
 
     return (
-      <div key={msg.message_id} className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
-        {isGroupChat && !isSent && (
-          <div className="sender-name">{senderName}</div>
-        )}
-        <div className="message-content">{msg.message_text}</div>
-        <div className="message-meta">
-          <span className="message-time">{formatTime(msg.created_at)}</span>
-          {isSent && msg.is_read && <span className="read-indicator">✓✓</span>}
+      <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
+        <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
+          {isGroupChat && !isSent && (
+            <div className="sender-name">{senderName}</div>
+          )}
+          <div className="message-content">{msg.message_text}</div>
+          <div className="message-meta">
+            <span className="message-time">{formatTime(msg.created_at)}</span>
+            {isSent && msg.is_read && <span className="read-indicator">✓✓</span>}
+          </div>
+          
+          <button 
+            className="add-reaction-btn"
+            onClick={() => setShowReactionPicker(msg.message_id)}
+          >
+            😊+
+          </button>
+          
+          {showReactionPicker === msg.message_id && (
+            <ReactionPicker
+              onSelect={(emoji) => handleReaction(msg.message_id, emoji)}
+              onClose={() => setShowReactionPicker(null)}
+              position={isSent ? 'top' : 'bottom'}
+            />
+          )}
         </div>
+        {renderReactions(msg)}
       </div>
     );
   };

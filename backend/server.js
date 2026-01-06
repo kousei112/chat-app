@@ -13,6 +13,7 @@ const userRoutes = require('./routes/users');
 const conversationRoutes = require('./routes/conversations');
 const uploadRoutes = require('./routes/upload');
 const groupRoutes = require('./routes/groups');
+const reactionRoutes = require('./routes/reactions');
 
 const app = express();
 const server = http.createServer(app);
@@ -36,6 +37,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/groups', groupRoutes);
+app.use('/api/reactions', reactionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -291,6 +293,17 @@ io.on('connection', (socket) => {
     } catch (error) {
       console.error('Lỗi khi disconnect:', error);
     }
+  });
+
+  socket.on('message-reaction', (data) => {
+  const { conversationId, messageId, reactions } = data;
+  
+  // Broadcast reaction update đến tất cả users trong conversation
+  io.emit('message-reaction-update', {
+    conversationId,
+    messageId,
+    reactions
+  });
   });
 });
 
