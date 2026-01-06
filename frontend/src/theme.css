@@ -1,0 +1,328 @@
+/* ===== THEME VARIABLES ===== */
+:root {
+  /* Light Theme Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f0f0f0;
+  
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  
+  --border-color: #e0e0e0;
+  --shadow: rgba(0, 0, 0, 0.1);
+  
+  --message-sent-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --message-sent-text: #ffffff;
+  --message-received-bg: #ffffff;
+  --message-received-text: #333333;
+  
+  --sidebar-bg: #ffffff;
+  --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  --input-bg: #ffffff;
+  --input-border: #e0e0e0;
+  --input-focus: #667eea;
+  
+  --reaction-bg: #f0f0f0;
+  --reaction-border: #e0e0e0;
+  --reaction-active-bg: #e3f2fd;
+  --reaction-active-border: #667eea;
+}
+
+/* ===== DARK THEME ===== */
+body.dark-theme {
+  /* Dark Theme Colors */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3a3a3a;
+  
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #808080;
+  
+  --border-color: #404040;
+  --shadow: rgba(0, 0, 0, 0.3);
+  
+  --message-sent-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --message-sent-text: #ffffff;
+  --message-received-bg: #2d2d2d;
+  --message-received-text: #e0e0e0;
+  
+  --sidebar-bg: #1e1e1e;
+  --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  --input-bg: #2d2d2d;
+  --input-border: #404040;
+  --input-focus: #667eea;
+  
+  --reaction-bg: #3a3a3a;
+  --reaction-border: #505050;
+  --reaction-active-bg: #2a3a4a;
+  --reaction-active-border: #667eea;
+}
+
+/* ===== APPLY THEME VARIABLES ===== */
+
+/* Global */
+body {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Messaging App */
+.messaging-app {
+  background: var(--bg-secondary);
+}
+
+.app-sidebar {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+}
+
+.sidebar-header {
+  background: var(--header-bg);
+}
+
+.sidebar-footer {
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Conversation List */
+.conversation-item {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.conversation-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.conversation-item.active {
+  background: var(--bg-tertiary);
+}
+
+.conv-name {
+  color: var(--text-primary);
+}
+
+.conv-last-message {
+  color: var(--text-secondary);
+}
+
+/* Chat Window */
+.private-chat-window {
+  background: var(--bg-primary);
+}
+
+.chat-window-header {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-user-name {
+  color: var(--text-primary);
+}
+
+.header-user-status {
+  color: var(--text-secondary);
+}
+
+.messages-area {
+  background: var(--bg-secondary);
+}
+
+/* Messages */
+.message-bubble.sent .message-content {
+  background: var(--message-sent-bg);
+  color: var(--message-sent-text);
+}
+
+.message-bubble.received .message-content {
+  background: var(--message-received-bg);
+  color: var(--message-received-text);
+  box-shadow: 0 2px 5px var(--shadow);
+}
+
+.message-meta {
+  color: var(--text-tertiary);
+}
+
+.sender-name {
+  color: #667eea;
+}
+
+/* Reactions */
+.add-reaction-btn {
+  background: var(--bg-primary);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.reaction-item {
+  background: var(--reaction-bg);
+  border-color: var(--reaction-border);
+}
+
+.reaction-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.reaction-item.reacted-by-me {
+  background: var(--reaction-active-bg);
+  border-color: var(--reaction-active-border);
+}
+
+.reaction-count {
+  color: var(--text-secondary);
+}
+
+/* Input Area */
+.message-input-area {
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+}
+
+.action-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.message-input-area input[type="text"] {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+
+.message-input-area input[type="text"]:focus {
+  border-color: var(--input-focus);
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* Uploading Indicator */
+.uploading-indicator {
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Modals */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.profile-modal,
+.create-group-modal,
+.user-list-modal {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.profile-field label,
+.form-group label {
+  color: var(--text-secondary);
+}
+
+.profile-value,
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.profile-value:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--input-focus);
+}
+
+/* User List */
+.member-item {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.member-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.member-name {
+  color: var(--text-primary);
+}
+
+.member-username {
+  color: var(--text-secondary);
+}
+
+/* Emoji Picker */
+.emoji-picker {
+  background: var(--bg-primary);
+  box-shadow: 0 -5px 20px var(--shadow);
+}
+
+.emoji-header {
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.emoji-item:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Reaction Picker */
+.reaction-picker {
+  background: var(--bg-primary);
+  box-shadow: 0 4px 20px var(--shadow);
+}
+
+.reaction-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Scrollbar Dark Theme */
+body.dark-theme ::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* File Messages */
+.message-file {
+  background: var(--bg-tertiary);
+}
+
+/* Placeholders */
+::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+/* Smooth transitions for theme switch */
+* {
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* Prevent transition on transform and opacity */
+*:not(.message-wrapper):not(.reaction-item) {
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}

@@ -40,7 +40,8 @@ export const userAPI = {
   completeProfile: (profileData) => api.post('/users/complete-profile', profileData),
   updateProfile: (profileData) => api.put('/users/profile', profileData),
   getAllUsers: () => api.get('/users/all'),
-  uploadAvatar: (avatarUrl) => api.post('/users/upload-avatar', { avatarUrl })
+  uploadAvatar: (avatarUrl) => api.post('/users/upload-avatar', { avatarUrl }),
+  updateTheme: (theme) => api.post('/users/update-theme', { theme })
 };
 
 // Conversation APIs

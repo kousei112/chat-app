@@ -6,6 +6,7 @@ import PrivateChatWindow from './PrivateChatWindow';
 import UserList from './UserList';
 import UserProfile from './UserProfile';
 import CreateGroupModal from './CreateGroupModal';
+import ThemeToggle from './ThemeToggle';
 import './MessagingApp.css';
 
 function MessagingApp({ socket, user, onLogout }) {
@@ -100,6 +101,7 @@ function MessagingApp({ socket, user, onLogout }) {
         <div className="sidebar-header">
           <h2>💬 Chat</h2>
           <div className="header-actions">
+            <ThemeToggle />
             <button 
               className="icon-btn profile-icon" 
               onClick={() => setShowProfile(true)}

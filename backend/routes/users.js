@@ -315,4 +315,43 @@ router.post('/upload-avatar', authMiddleware, async (req, res) => {
   }
 });
 
+// Update theme preference
+router.post('/update-theme', authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { theme } = req.body;
+
+    if (!theme || !['light', 'dark'].includes(theme)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Theme không hợp lệ. Chỉ chấp nhận: light, dark' 
+      });
+    }
+
+    const pool = await getPool();
+
+    await pool.request()
+      .input('user_id', sql.Int, userId)
+      .input('theme', sql.NVarChar, theme)
+      .query(`
+        UPDATE Users 
+        SET theme = @theme
+        WHERE user_id = @user_id
+      `);
+
+    res.json({
+      success: true,
+      message: 'Cập nhật theme thành công',
+      data: { theme }
+    });
+
+  } catch (error) {
+    console.error('Lỗi update theme:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Lỗi server' 
+    });
+  }
+});
+
 module.exports = router;
