@@ -38,12 +38,14 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     socket.on('user-typing', handleUserTyping);
     socket.on('user-stop-typing', handleStopTyping);
     socket.on('message-reaction-update', handleReactionUpdate);
+    socket.on('message-recalled', handleMessageRecalled);
 
     return () => {
       socket.off('receive-private-message', handleReceiveMessage);
       socket.off('user-typing', handleUserTyping);
       socket.off('user-stop-typing', handleStopTyping);
       socket.off('message-reaction-update', handleReactionUpdate);
+      socket.off('message-recalled', handleMessageRecalled);
     };
   }, [conversation]);
 
@@ -89,6 +91,50 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
             : msg
         )
       );
+    }
+  };
+
+  const handleMessageRecalled = (data) => {
+    if (data.conversationId === conversation.conversation_id) {
+      setMessages(prevMessages =>
+        prevMessages.map(msg =>
+          msg.message_id === data.messageId
+            ? { ...msg, is_recalled: true, recalled_at: data.recalledAt }
+            : msg
+        )
+      );
+    }
+  };
+
+  const handleRecallMessage = async (messageId) => {
+    if (!window.confirm('Bạn có chắc muốn thu hồi tin nhắn này?')) {
+      return;
+    }
+
+    try {
+      const response = await conversationAPI.recallMessage(
+        conversation.conversation_id,
+        messageId
+      );
+
+      if (response.data.success) {
+        setMessages(prevMessages =>
+          prevMessages.map(msg =>
+            msg.message_id === messageId
+              ? { ...msg, is_recalled: true, recalled_at: new Date() }
+              : msg
+          )
+        );
+
+        socket.emit('message-recalled', {
+          conversationId: conversation.conversation_id,
+          messageId,
+          recalledAt: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Lỗi thu hồi tin nhắn:', error);
+      alert('Không thể thu hồi tin nhắn');
     }
   };
 
@@ -274,11 +320,51 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
       );
     };
 
+    const renderMessageActions = () => {
+      if (!isSent || msg.is_recalled) return null;
+
+      return (
+        <div className="message-actions-inline">
+          <button
+            className="message-action-btn-inline recall-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRecallMessage(msg.message_id);
+            }}
+            title="Thu hồi tin nhắn"
+          >
+            ↩️
+          </button>
+        </div>
+      );
+    };
+
+    // TIN NHẮN ĐÃ THU HỒI
+    if (msg.is_recalled) {
+      return (
+        <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
+          <div className={`message-bubble ${isSent ? 'sent' : 'received'} recalled`}>
+            {renderSenderInfo()}
+            <div className="message-recalled-text">
+              <span className="recalled-icon">↩️</span>
+              Tin nhắn đã bị thu hồi.
+            </div>
+            <div className="message-meta">
+              <span className="message-time">{formatTime(msg.recalled_at || msg.created_at)}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // TIN NHẮN HÌNH ẢNH
     if (msg.message_type === 'image' && msg.file_url) {
       return (
         <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
           <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
             {renderSenderInfo()}
+            {renderMessageActions()}
+            
             <div className="message-image">
               <img 
                 src={`http://localhost:5000${msg.file_url}`} 
@@ -314,11 +400,14 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
       );
     }
 
+    // TIN NHẮN FILE
     if (msg.message_type === 'file' && msg.file_url) {
       return (
         <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
           <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
             {renderSenderInfo()}
+            {renderMessageActions()}
+            
             <div className="message-file">
               <div className="file-icon">📎</div>
               <div className="file-info">
@@ -360,10 +449,13 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
       );
     }
 
+    // TIN NHẮN TEXT
     return (
       <div key={msg.message_id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
         <div className={`message-bubble ${isSent ? 'sent' : 'received'}`}>
           {renderSenderInfo()}
+          {renderMessageActions()}
+          
           <div className="message-content">{msg.message_text}</div>
           <div className="message-meta">
             <span className="message-time">{formatTime(msg.created_at)}</span>

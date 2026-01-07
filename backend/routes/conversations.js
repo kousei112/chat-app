@@ -197,6 +197,8 @@ router.get('/:conversationId/messages', authMiddleware, async (req, res) => {
           m.receiver_id,
           m.is_read,
           m.read_at,
+          m.is_recalled,
+          m.recalled_at,
           m.file_url,
           m.file_name,
           m.file_size,
@@ -472,6 +474,84 @@ router.get('/:conversationId/media', authMiddleware, async (req, res) => {
 
   } catch (error) {
     console.error('Lỗi lấy media:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Lỗi server' 
+    });
+  }
+});
+
+// Thu hồi tin nhắn
+router.post('/:conversationId/messages/:messageId/recall', authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { conversationId, messageId } = req.params;
+
+    const pool = await getPool();
+
+    // Kiểm tra tin nhắn có tồn tại và thuộc về user này không
+    const messageCheck = await pool.request()
+      .input('message_id', sql.Int, messageId)
+      .input('conversation_id', sql.Int, conversationId)
+      .input('user_id', sql.Int, userId)
+      .query(`
+        SELECT message_id, sender_id, is_recalled, created_at
+        FROM Messages
+        WHERE message_id = @message_id 
+          AND conversation_id = @conversation_id
+          AND sender_id = @user_id
+          AND is_deleted = 0
+      `);
+
+    if (messageCheck.recordset.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Không tìm thấy tin nhắn hoặc bạn không có quyền thu hồi' 
+      });
+    }
+
+    const message = messageCheck.recordset[0];
+
+    // Kiểm tra đã thu hồi chưa
+    if (message.is_recalled) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Tin nhắn đã được thu hồi trước đó' 
+      });
+    }
+
+    // Kiểm tra thời gian (optional - chỉ cho phép thu hồi trong 24h)
+    // const messageAge = Date.now() - new Date(message.created_at).getTime();
+    // const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+    // if (messageAge > maxAge) {
+    //   return res.status(400).json({ 
+    //     success: false, 
+    //     message: 'Chỉ có thể thu hồi tin nhắn trong vòng 24 giờ' 
+    //   });
+    // }
+
+    // Thu hồi tin nhắn
+    await pool.request()
+      .input('message_id', sql.Int, messageId)
+      .query(`
+        UPDATE Messages 
+        SET is_recalled = 1,
+            recalled_at = GETDATE()
+        WHERE message_id = @message_id
+      `);
+
+    res.json({
+      success: true,
+      message: 'Đã thu hồi tin nhắn',
+      data: {
+        messageId: parseInt(messageId),
+        conversationId: parseInt(conversationId),
+        recalledAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error('Lỗi thu hồi tin nhắn:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Lỗi server' 

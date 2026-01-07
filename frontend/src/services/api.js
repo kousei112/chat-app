@@ -55,7 +55,9 @@ export const conversationAPI = {
   searchMessages: (conversationId, keyword) => 
     api.get(`/conversations/${conversationId}/search?keyword=${encodeURIComponent(keyword)}`),
   getMedia: (conversationId, type = 'all') => 
-    api.get(`/conversations/${conversationId}/media?type=${type}`)
+    api.get(`/conversations/${conversationId}/media?type=${type}`),
+  recallMessage: (conversationId, messageId) =>
+    api.post(`/conversations/${conversationId}/messages/${messageId}/recall`)
 };
 
 // Upload APIs
