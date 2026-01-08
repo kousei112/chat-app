@@ -17,7 +17,7 @@ router.get('/', authMiddleware, async (req, res) => {
           c.conversation_type,
           c.group_name,
           c.group_avatar_url,
-          DATEADD(HOUR, 7, c.updated_at) as updated_at,
+          c.updated_at,
           -- Thông tin cho private chat
           other_user.user_id as other_user_id,
           other_user.username as other_username,
@@ -27,7 +27,7 @@ router.get('/', authMiddleware, async (req, res) => {
           other_user.is_online as other_is_online,
           -- Thông tin chung
           last_msg.message_text as last_message,
-          DATEADD(HOUR, 7, last_msg.created_at) as last_message_time,
+          last_msg.created_at as last_message_time,
           last_msg.sender_id as last_sender_id,
           (SELECT COUNT(*) 
            FROM Messages m2 
@@ -203,7 +203,7 @@ router.get('/:conversationId/messages', authMiddleware, async (req, res) => {
           m.file_name,
           m.file_size,
           m.file_type,
-          DATEADD(HOUR, 7, m.created_at) as created_at,
+          m.created_at,
           sender.username as sender_username,
           sender.display_name as sender_display_name,
           sender.full_name as sender_full_name,
@@ -519,16 +519,6 @@ router.post('/:conversationId/messages/:messageId/recall', authMiddleware, async
         message: 'Tin nhắn đã được thu hồi trước đó' 
       });
     }
-
-    // Kiểm tra thời gian (optional - chỉ cho phép thu hồi trong 24h)
-    // const messageAge = Date.now() - new Date(message.created_at).getTime();
-    // const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-    // if (messageAge > maxAge) {
-    //   return res.status(400).json({ 
-    //     success: false, 
-    //     message: 'Chỉ có thể thu hồi tin nhắn trong vòng 24 giờ' 
-    //   });
-    // }
 
     // Thu hồi tin nhắn
     await pool.request()

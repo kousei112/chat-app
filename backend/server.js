@@ -334,7 +334,6 @@ const startServer = async () => {
 
 startServer();
 
-// Xử lý tắt server
 process.on('SIGINT', async () => {
   console.log('\n🛑 Đang tắt server...');
   const { closePool } = require('./config/database');

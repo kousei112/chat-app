@@ -75,7 +75,7 @@ router.post('/create', authMiddleware, async (req, res) => {
           c.group_avatar_url,
           c.conversation_type,
           c.created_by,
-          DATEADD(HOUR, 7, c.created_at) as created_at,
+          c.created_at,
           (SELECT COUNT(*) FROM ConversationParticipants 
            WHERE conversation_id = c.conversation_id AND is_active = 1) as member_count,
           cp.role as user_role
@@ -134,7 +134,7 @@ router.get('/:conversationId', authMiddleware, async (req, res) => {
           c.group_avatar_url,
           c.conversation_type,
           c.created_by,
-          DATEADD(HOUR, 7, c.created_at) as created_at,
+          c.created_at,
           creator.username as creator_username,
           creator.display_name as creator_display_name,
           creator.full_name as creator_full_name
@@ -151,7 +151,7 @@ router.get('/:conversationId', authMiddleware, async (req, res) => {
           cp.user_id,
           cp.role,
           cp.nickname,
-          DATEADD(HOUR, 7, cp.joined_at) as joined_at,
+          cp.joined_at,
           u.username,
           u.display_name,
           u.full_name,

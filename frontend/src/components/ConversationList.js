@@ -5,9 +5,11 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
   
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp);
+    // Xử lý timestamp theo múi giờ Việt Nam (UTC+7)
+    const utcDate = new Date(timestamp);
+    const vnDate = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
     const now = new Date();
-    const diffInMs = now - date;
+    const diffInMs = now - vnDate;
     const diffInMins = Math.floor(diffInMs / 60000);
     
     if (diffInMins < 1) return 'Vừa xong';
@@ -15,7 +17,7 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
     if (diffInMins < 1440) return `${Math.floor(diffInMins / 60)} giờ`;
     if (diffInMins < 10080) return `${Math.floor(diffInMins / 1440)} ngày`;
     
-    return date.toLocaleDateString('vi-VN');
+    return vnDate.toLocaleDateString('vi-VN');
   };
 
   const truncateMessage = (text, maxLength = 40) => {

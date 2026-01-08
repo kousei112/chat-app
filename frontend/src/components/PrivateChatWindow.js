@@ -258,8 +258,12 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('vi-VN', { 
+    // Xử lý timestamp theo múi giờ Việt Nam (UTC+7)
+    // Do backend trả về UTC, ta cần cộng thêm offset
+    const utcDate = new Date(timestamp);
+    const vnDate = new Date(utcDate.getTime() - 14 * 60 * 60 * 1000);
+    return vnDate.toLocaleTimeString('vi-VN', { 
+      timeZone: 'Asia/Ho_Chi_Minh',
       hour: '2-digit', 
       minute: '2-digit' 
     });
