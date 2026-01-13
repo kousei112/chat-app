@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { userAPI } from '../services/api';
 import './CreateGroupModal.css';
 
-function CreateGroupModal({ onClose, onCreate }) {
+function CreateGroupModal({ socket, onClose, onCreate }) {
   const [groupName, setGroupName] = useState('');
   const [description, setDescription] = useState('');
   const [allUsers, setAllUsers] = useState([]);
@@ -57,11 +57,28 @@ function CreateGroupModal({ onClose, onCreate }) {
 
     try {
       setCreating(true);
-      await onCreate({
+      
+      // ===== AWAIT onCreate để nhận result =====
+      const result = await onCreate({
         groupName: groupName.trim(),
         memberIds: selectedMembers,
         description: description.trim()
       });
+      
+      // ===== Emit socket event =====
+      if (socket && result && result.conversation_id) {
+        socket.emit('group-created', {
+          conversationId: result.conversation_id,
+          memberIds: selectedMembers,
+          groupName: groupName.trim()
+        });
+        
+        console.log('Emitted group-created event:', {
+          conversationId: result.conversation_id,
+          memberIds: selectedMembers
+        });
+      }
+      
       onClose();
     } catch (error) {
       console.error('Lỗi tạo group:', error);

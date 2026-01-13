@@ -5,6 +5,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+  isolation: isolate;
 }
 
 .conversation-list-header {
@@ -12,6 +14,10 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .conversation-list-header h3 {
@@ -22,6 +28,11 @@
 .conversation-items {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: auto;
+  overscroll-behavior: contain;
+  position: relative;
+  will-change: scroll-position;
 }
 
 .no-conversations {
@@ -46,6 +57,8 @@
   border-bottom: 1px solid #f0f0f0;
   transition: background 0.2s;
   position: relative;
+  scroll-margin-top: 0;
+  scroll-snap-align: none;
 }
 
 .conversation-item:hover {
@@ -55,6 +68,16 @@
 .conversation-item.active {
   background: #e3f2fd;
   border-left: 3px solid #667eea;
+}
+
+.conversation-item:focus {
+  outline: none;
+  scroll-margin: 0;
+}
+
+.conversation-item:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: -2px;
 }
 
 .conv-avatar {
@@ -179,5 +202,10 @@
 @media (max-width: 768px) {
   .conversation-list {
     width: 100%;
+  }
+
+  .conversation-items {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;
   }
 }

@@ -305,6 +305,28 @@ io.on('connection', (socket) => {
     reactions
   });
   });
+
+  socket.on('group-created', async (data) => {
+    try {
+      const { conversationId, memberIds } = data;
+      
+      console.log(`Group ${conversationId} created with members:`, memberIds);
+      
+      // Gửi thông báo cho tất cả thành viên trong nhóm
+      memberIds.forEach(memberId => {
+        const memberSocketId = userSockets.get(memberId);
+        if (memberSocketId) {
+          console.log(`Notifying member ${memberId} about new group`);
+          io.to(memberSocketId).emit('new-group-notification', {
+            conversationId,
+            message: 'Bạn đã được thêm vào một nhóm mới'
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Lỗi group-created event:', error);
+    }
+  });
 });
 
 const PORT = process.env.PORT || 5000;

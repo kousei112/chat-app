@@ -23,10 +23,12 @@ function MessagingApp({ socket, user, onLogout }) {
 
     socket.on('receive-private-message', handleNewMessage);
     socket.on('new-message-notification', handleNotification);
+    socket.on('new-group-notification', handleNewGroupNotification);
 
     return () => {
       socket.off('receive-private-message', handleNewMessage);
       socket.off('new-message-notification', handleNotification);
+      socket.off('new-group-notification', handleNewGroupNotification);
     };
   }, []);
 
@@ -50,6 +52,11 @@ function MessagingApp({ socket, user, onLogout }) {
     loadConversations();
   };
 
+  const handleNewGroupNotification = (data) => {
+    console.log('Received new group notification:', data);
+    loadConversations();
+  };
+
   const handleSelectConversation = (conversation) => {
     setSelectedConversation(conversation);
   };
@@ -64,6 +71,7 @@ function MessagingApp({ socket, user, onLogout }) {
       const response = await groupAPI.createGroup(groupData);
       if (response.data.success) {
         loadConversations();
+        
         // Auto-select group vừa tạo
         const newGroup = response.data.data;
         setSelectedConversation({
@@ -72,6 +80,9 @@ function MessagingApp({ socket, user, onLogout }) {
           group_name: newGroup.group_name,
           member_count: newGroup.member_count
         });
+        
+        // ===== RETURN newGroup để CreateGroupModal có thể emit socket event =====
+        return newGroup;
       }
     } catch (error) {
       throw error;
@@ -191,6 +202,7 @@ function MessagingApp({ socket, user, onLogout }) {
 
       {showCreateGroup && (
         <CreateGroupModal
+          socket={socket}
           onClose={() => setShowCreateGroup(false)}
           onCreate={handleCreateGroup}
         />

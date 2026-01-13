@@ -1,11 +1,32 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import './ConversationList.css';
 
 function ConversationList({ conversations, selectedConversation, onSelectConversation, currentUserId }) {
   
+  // ✅ Ref để maintain scroll position
+  const conversationItemsRef = useRef(null);
+  const scrollPositionRef = useRef(0);
+
+  // ✅ Save scroll position mỗi khi có thay đổi
+  const handleScroll = () => {
+    if (conversationItemsRef.current) {
+      scrollPositionRef.current = conversationItemsRef.current.scrollTop;
+    }
+  };
+
+  // ✅ Restore scroll position sau khi render
+  useEffect(() => {
+    if (conversationItemsRef.current && scrollPositionRef.current > 0) {
+      requestAnimationFrame(() => {
+        if (conversationItemsRef.current) {
+          conversationItemsRef.current.scrollTop = scrollPositionRef.current;
+        }
+      });
+    }
+  });
+
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    // Xử lý timestamp theo múi giờ Việt Nam (UTC+7)
     const utcDate = new Date(timestamp);
     const vnDate = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
     const now = new Date();
@@ -25,13 +46,33 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
 
+  const handleSelectConversation = (conv, event) => {
+    // ✅ Prevent default scroll behavior
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    // Save current scroll position
+    if (conversationItemsRef.current) {
+      scrollPositionRef.current = conversationItemsRef.current.scrollTop;
+    }
+
+    // Call parent handler
+    onSelectConversation(conv);
+  };
+
   return (
     <div className="conversation-list">
       <div className="conversation-list-header">
         <h3>💬 Tin nhắn</h3>
       </div>
 
-      <div className="conversation-items">
+      <div 
+        className="conversation-items" 
+        ref={conversationItemsRef}
+        onScroll={handleScroll}
+      >
         {conversations.length === 0 ? (
           <div className="no-conversations">
             <p>Chưa có cuộc trò chuyện nào</p>
@@ -39,12 +80,10 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
           </div>
         ) : (
           conversations.map((conv) => {
-            // Xác định tên hiển thị
             const displayName = conv.conversation_type === 'group' 
               ? conv.group_name
               : (conv.other_full_name || conv.other_display_name || conv.other_username);
 
-            // Xác định avatar
             const avatarLetter = conv.conversation_type === 'group'
               ? (conv.group_name ? conv.group_name.charAt(0).toUpperCase() : '👥')
               : (conv.other_full_name 
@@ -57,7 +96,7 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
                 className={`conversation-item ${
                   selectedConversation?.conversation_id === conv.conversation_id ? 'active' : ''
                 }`}
-                onClick={() => onSelectConversation(conv)}
+                onClick={(e) => handleSelectConversation(conv, e)}
               >
                 <div className="conv-avatar">
                   <div className={`avatar-circle ${conv.conversation_type === 'group' ? 'group-avatar' : ''}`}>

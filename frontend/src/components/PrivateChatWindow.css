@@ -4,7 +4,10 @@
   display: flex;
   flex-direction: column;
   background: var(--bg-primary, white);
-  height: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  position: relative;
 }
 
 /* ===== HEADER ===== */
@@ -16,6 +19,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 10;
 }
 
 .header-user-info {
@@ -85,11 +90,14 @@
 .messages-area {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 20px;
   background: var(--bg-secondary, #f8f9fa);
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
+  position: relative;
 }
 
 /* ===== MESSAGE WRAPPER ===== */
@@ -438,6 +446,8 @@ body.dark-theme .message-action-btn-inline {
   background: var(--bg-primary, white);
   border-top: 1px solid var(--border-color, #e0e0e0);
   flex-shrink: 0;
+  position: relative;
+  z-index: 9;
 }
 
 .typing-dots {
@@ -453,6 +463,9 @@ body.dark-theme .message-action-btn-inline {
   gap: 10px;
   color: #667eea;
   font-size: 14px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 9;
 }
 
 .spinner {
@@ -472,6 +485,9 @@ body.dark-theme .message-action-btn-inline {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 }
 
 .action-btn {
@@ -502,11 +518,15 @@ body.dark-theme .message-action-btn-inline {
   background: var(--input-bg, white);
   color: var(--text-primary, #333);
   transition: border-color 0.3s;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .message-input-area input[type="text"]:focus {
   outline: none;
   border-color: #667eea;
+  scroll-margin-bottom: 0;
 }
 
 .message-input-area button[type="submit"] {
@@ -656,6 +676,10 @@ body.dark-theme .message-action-btn-inline {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
+  .private-chat-window {
+    height: 100dvh;
+  }
+
   .message-wrapper {
     max-width: 85%;
   }
@@ -666,6 +690,7 @@ body.dark-theme .message-action-btn-inline {
   
   .messages-area {
     padding: 15px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .message-image {
@@ -684,4 +709,15 @@ body.dark-theme .message-action-btn-inline {
   .reaction-count {
     font-size: 11px;
   }
+
+  .message-input-area input[type="text"] {
+    font-size: 16px;
+  }
+}
+
+/* ===== FIX: Body lock khi focus input ===== */
+body.input-focused {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
