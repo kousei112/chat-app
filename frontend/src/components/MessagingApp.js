@@ -18,6 +18,71 @@ function MessagingApp({ socket, user, onLogout }) {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
 
+  // ===== 🔒 LỚP 2: JAVASCRIPT SCROLL LOCK =====
+  useEffect(() => {
+    // Save current scroll position
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = `-${scrollX}px`;
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+
+    // Lock html scroll
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.height = '100%';
+
+    // Disable scrollIntoView globally
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function() {
+      // Block scrollIntoView completely
+      console.log('scrollIntoView blocked');
+    };
+
+    // Prevent scroll restoration
+    if ('scrollRestoration' in history) {
+      const originalScrollRestoration = history.scrollRestoration;
+      history.scrollRestoration = 'manual';
+    }
+
+    // Prevent window scroll events
+    const preventScroll = (e) => {
+      if (e.target === document || e.target === document.documentElement || e.target === document.body) {
+        window.scrollTo(0, 0);
+      }
+    };
+
+    window.addEventListener('scroll', preventScroll, { passive: false });
+    document.addEventListener('scroll', preventScroll, { passive: false });
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.height = '';
+      
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+      
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'auto';
+      }
+
+      window.removeEventListener('scroll', preventScroll);
+      document.removeEventListener('scroll', preventScroll);
+      
+      window.scrollTo(scrollX, scrollY);
+    };
+  }, []);
+
   useEffect(() => {
     loadConversations();
 
@@ -58,10 +123,20 @@ function MessagingApp({ socket, user, onLogout }) {
   };
 
   const handleSelectConversation = (conversation) => {
+    // ===== 🔒 Force lock window scroll =====
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
     setSelectedConversation(conversation);
   };
 
   const handleSelectUser = (newConversation) => {
+    // ===== 🔒 Force lock window scroll =====
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
     setSelectedConversation(newConversation);
     loadConversations();
   };
@@ -81,7 +156,7 @@ function MessagingApp({ socket, user, onLogout }) {
           member_count: newGroup.member_count
         });
         
-        // ===== RETURN newGroup để CreateGroupModal có thể emit socket event =====
+        // Return newGroup để CreateGroupModal có thể emit socket event
         return newGroup;
       }
     } catch (error) {
@@ -113,6 +188,11 @@ function MessagingApp({ socket, user, onLogout }) {
     );
     
     if (conversation) {
+      // ===== 🔒 Force lock window scroll =====
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      
       setSelectedConversation(conversation);
     } else {
       loadConversations();
@@ -120,7 +200,17 @@ function MessagingApp({ socket, user, onLogout }) {
   };
 
   return (
-    <div className="messaging-app">
+    <div 
+      className="messaging-app"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100vh',
+        overflow: 'hidden'
+      }}
+    >
       <div className="app-sidebar">
         <div className="sidebar-header">
           <h2>💬 Chat</h2>
