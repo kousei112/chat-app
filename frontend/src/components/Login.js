@@ -81,7 +81,7 @@ function Login({ onLogin }) {
   return (
     <div className="login-container">
       <div className="login-box">
-        <h1>🗨️ Chat App</h1>
+        <h1>🗨️ Bean Talk</h1>
         <p>{isRegister ? 'Tạo tài khoản mới' : 'Đăng nhập vào tài khoản'}</p>
         
         {error && <div className="error-message">{error}</div>}
