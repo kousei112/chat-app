@@ -120,6 +120,33 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ===== HANDLE NOTIFY NEW GROUP =====
+  socket.on('notify-new-group', async (data) => {
+    try {
+      const { conversationId, groupName, memberIds, targetUserId } = data;
+      
+      console.log(`Notifying user ${targetUserId} about new group ${conversationId}`);
+      
+      // Lấy socket ID của target user
+      const targetSocketId = userSockets.get(targetUserId);
+      
+      if (targetSocketId) {
+        // Gửi notification đến user cụ thể
+        io.to(targetSocketId).emit('new-group-notification', {
+          conversationId,
+          groupName,
+          message: `Bạn đã được thêm vào nhóm "${groupName}"`
+        });
+        
+        console.log(`✅ Sent notification to user ${targetUserId} via socket ${targetSocketId}`);
+      } else {
+        console.log(`⚠️ User ${targetUserId} is offline, cannot send notification`);
+      }
+    } catch (error) {
+      console.error('Lỗi notify-new-group:', error);
+    }
+  });
+
   // Nhận tin nhắn từ client
   socket.on('send-private-message', async (messageData) => {
     try {
@@ -208,20 +235,35 @@ io.on('connection', (socket) => {
         sender_avatar_url: sender.avatar_url
       };
 
-      // Gửi tin nhắn cho cả sender và receiver
+      // Gửi tin nhắn cho cả sender
       socket.emit('receive-private-message', message);
       
-      // Gửi cho receiver nếu họ online
-      const receiverSocketId = userSockets.get(receiverId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit('receive-private-message', message);
-        io.to(receiverSocketId).emit('new-message-notification', {
-          conversationId,
-          senderId,
-          senderName: sender.display_name || sender.username,
-          messageText: text
-        });
-      }
+      // Lấy tất cả participants của conversation (trừ sender)
+      const participants = await pool.request()
+        .input('conversation_id', sql.Int, conversationId)
+        .input('sender_id', sql.Int, senderId)
+        .query(`
+          SELECT user_id 
+          FROM ConversationParticipants 
+          WHERE conversation_id = @conversation_id 
+            AND user_id != @sender_id 
+            AND is_active = 1
+        `);
+
+      // Gửi cho TẤT CẢ participants khác
+      participants.recordset.forEach(participant => {
+        const participantSocketId = userSockets.get(participant.user_id);
+        if (participantSocketId) {
+          io.to(participantSocketId).emit('receive-private-message', message);
+          io.to(participantSocketId).emit('new-message-notification', {
+            conversationId,
+            senderId,
+            senderName: sender.display_name || sender.username,
+            messageText: text,
+            senderAvatar: sender.avatar_url
+          });
+        }
+      });
 
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
@@ -295,37 +337,28 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Message reaction
   socket.on('message-reaction', (data) => {
-  const { conversationId, messageId, reactions } = data;
-  
-  // Broadcast reaction update đến tất cả users trong conversation
-  io.emit('message-reaction-update', {
-    conversationId,
-    messageId,
-    reactions
-  });
+    const { conversationId, messageId, reactions } = data;
+    
+    // Broadcast reaction update đến tất cả users trong conversation
+    io.emit('message-reaction-update', {
+      conversationId,
+      messageId,
+      reactions
+    });
   });
 
-  socket.on('group-created', async (data) => {
-    try {
-      const { conversationId, memberIds } = data;
-      
-      console.log(`Group ${conversationId} created with members:`, memberIds);
-      
-      // Gửi thông báo cho tất cả thành viên trong nhóm
-      memberIds.forEach(memberId => {
-        const memberSocketId = userSockets.get(memberId);
-        if (memberSocketId) {
-          console.log(`Notifying member ${memberId} about new group`);
-          io.to(memberSocketId).emit('new-group-notification', {
-            conversationId,
-            message: 'Bạn đã được thêm vào một nhóm mới'
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Lỗi group-created event:', error);
-    }
+  // Message recalled
+  socket.on('message-recalled', (data) => {
+    const { conversationId, messageId, recalledAt } = data;
+    
+    // Broadcast recall event đến tất cả users
+    io.emit('message-recalled', {
+      conversationId,
+      messageId,
+      recalledAt
+    });
   });
 });
 
