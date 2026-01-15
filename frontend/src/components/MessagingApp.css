@@ -10,6 +10,8 @@
   border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
+  height: 100vh; /* ✅ Fixed height */
+  overflow: hidden; /* ✅ Prevent sidebar itself from scrolling */
 }
 
 .sidebar-header {
@@ -20,6 +22,7 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0; /* ✅ Prevent header from shrinking */
 }
 
 .sidebar-header h2 {
@@ -69,6 +72,15 @@
   font-size: 20px;
 }
 
+/* ===== CONVERSATION LIST - SCROLLABLE AREA ===== */
+.conversation-list {
+  flex: 1; /* ✅ Take remaining space */
+  overflow-y: auto; /* ✅ Only this part scrolls */
+  overflow-x: hidden;
+  min-height: 0; /* ✅ Important for flex child to be scrollable */
+}
+
+/* ===== SIDEBAR FOOTER - STICKY AT BOTTOM ===== */
 .sidebar-footer {
   padding: 15px;
   border-top: 1px solid #e0e0e0;
@@ -76,6 +88,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0; /* ✅ Never shrink */
+  position: sticky; /* ✅ Stick to bottom */
+  bottom: 0;
+  z-index: 10; /* ✅ Stay on top */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); /* ✅ Subtle shadow for depth */
 }
 
 .current-user-info {
@@ -83,6 +100,7 @@
   align-items: center;
   gap: 12px;
   flex: 1;
+  min-width: 0; /* ✅ Allow text truncation */
 }
 
 .user-avatar-small {
@@ -96,11 +114,12 @@
   justify-content: center;
   font-size: 16px;
   font-weight: bold;
+  flex-shrink: 0; /* ✅ Keep avatar size fixed */
 }
 
 .user-details {
   flex: 1;
-  min-width: 0;
+  min-width: 0; /* ✅ Allow text truncation */
 }
 
 .user-name-small {
@@ -110,6 +129,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-bottom: 2px;
 }
 
 .user-status-small {
@@ -130,12 +150,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.3s;
-  flex-shrink: 0;
+  transition: background 0.3s, transform 0.2s;
+  flex-shrink: 0; /* ✅ Keep button size fixed */
 }
 
 .logout-btn-small:hover {
   background: #d32f2f;
+  transform: scale(1.05);
+}
+
+.logout-btn-small:active {
+  transform: scale(0.95);
 }
 
 .app-main {
@@ -143,9 +168,55 @@
   display: flex;
   flex-direction: column;
   background: #f8f9fa;
+  overflow: hidden; /* ✅ Prevent main area from scrolling */
 }
 
-/* Responsive */
+/* ===== SCROLLBAR STYLING ===== */
+.conversation-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.conversation-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.conversation-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.conversation-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ===== DARK THEME SUPPORT ===== */
+body.dark-theme .app-sidebar {
+  background: var(--sidebar-bg);
+  border-right-color: var(--border-color);
+}
+
+body.dark-theme .sidebar-footer {
+  background: var(--bg-tertiary);
+  border-top-color: var(--border-color);
+}
+
+body.dark-theme .user-name-small {
+  color: var(--text-primary);
+}
+
+body.dark-theme .conversation-list::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+body.dark-theme .conversation-list::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark-theme .conversation-list::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .messaging-app {
     flex-direction: column;
@@ -160,6 +231,22 @@
 
   .app-main {
     height: 50%;
+  }
+  
+  .sidebar-footer {
+    padding: 12px 15px;
+  }
+  
+  .user-avatar-small {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  .logout-btn-small {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
   }
 }
 
@@ -181,9 +268,21 @@
     height: 35px;
     font-size: 16px;
   }
+  
+  .sidebar-footer {
+    padding: 10px 12px;
+  }
+  
+  .user-name-small {
+    font-size: 13px;
+  }
+  
+  .user-status-small {
+    font-size: 11px;
+  }
 }
 
-/* Animation */
+/* ===== ANIMATION ===== */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -195,4 +294,19 @@
 
 .messaging-app {
   animation: fadeIn 0.3s ease;
+}
+
+/* ===== ENSURE NO OVERLAP ===== */
+.conversation-list {
+  padding-bottom: 0; /* ✅ No extra padding needed since footer is separate */
+}
+
+/* ===== PREVENT BODY SCROLL (Already in index.css but ensure it's here too) ===== */
+.messaging-app {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }

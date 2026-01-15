@@ -1,12 +1,10 @@
 .conversation-list {
-  width: 320px;
+  /* ✅ Layout is now controlled by parent (MessagingApp) */
+  /* This component should NOT set its own height or flex */
+  width: 100%;
   background: white;
-  border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  position: relative;
-  isolation: isolate;
 }
 
 .conversation-list-header {
@@ -25,14 +23,17 @@
   font-size: 18px;
 }
 
+/* ===== SCROLLABLE ITEMS AREA ===== */
 .conversation-items {
+  /* ✅ This is the scrollable part */
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-behavior: auto;
+  scroll-behavior: smooth;
   overscroll-behavior: contain;
   position: relative;
   will-change: scroll-position;
+  /* ✅ Remove any fixed height - let parent control it */
 }
 
 .no-conversations {
@@ -180,7 +181,7 @@
   text-align: center;
 }
 
-/* Scrollbar */
+/* ===== SCROLLBAR ===== */
 .conversation-items::-webkit-scrollbar {
   width: 8px;
 }
@@ -198,7 +199,48 @@
   background: #555;
 }
 
-/* Responsive */
+/* ===== DARK THEME ===== */
+body.dark-theme .conversation-list {
+  background: var(--sidebar-bg);
+}
+
+body.dark-theme .conversation-item {
+  border-bottom-color: var(--border-color);
+}
+
+body.dark-theme .conversation-item:hover {
+  background: var(--bg-tertiary);
+}
+
+body.dark-theme .conversation-item.active {
+  background: var(--bg-tertiary);
+}
+
+body.dark-theme .conv-name {
+  color: var(--text-primary);
+}
+
+body.dark-theme .conv-last-message {
+  color: var(--text-secondary);
+}
+
+body.dark-theme .conv-time {
+  color: var(--text-tertiary);
+}
+
+body.dark-theme .conversation-items::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+body.dark-theme .conversation-items::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark-theme .conversation-items::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .conversation-list {
     width: 100%;
@@ -207,5 +249,39 @@
   .conversation-items {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: auto;
+  }
+  
+  .conversation-item {
+    padding: 12px 15px;
+  }
+  
+  .avatar-circle {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .conversation-item {
+    padding: 10px 12px;
+  }
+  
+  .avatar-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .conv-name {
+    font-size: 14px;
+  }
+  
+  .conv-last-message {
+    font-size: 13px;
+  }
+  
+  .conv-time {
+    font-size: 11px;
   }
 }

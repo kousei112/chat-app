@@ -43,10 +43,11 @@ function MessagingApp({ socket, user, onLogout }) {
       console.log('scrollIntoView blocked');
     };
 
-    // Prevent scroll restoration
-    if ('scrollRestoration' in history) {
-      const originalScrollRestoration = history.scrollRestoration;
-      history.scrollRestoration = 'manual';
+    // Prevent scroll restoration using window.history API
+    let originalScrollRestoration;
+    if ('scrollRestoration' in window.history) {
+      originalScrollRestoration = window.history.scrollRestoration;
+      window.history.scrollRestoration = 'manual';
     }
 
     // Prevent window scroll events
@@ -72,8 +73,8 @@ function MessagingApp({ socket, user, onLogout }) {
       
       Element.prototype.scrollIntoView = originalScrollIntoView;
       
-      if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'auto';
+      if ('scrollRestoration' in window.history && originalScrollRestoration) {
+        window.history.scrollRestoration = originalScrollRestoration;
       }
 
       window.removeEventListener('scroll', preventScroll);
@@ -86,6 +87,7 @@ function MessagingApp({ socket, user, onLogout }) {
   useEffect(() => {
     loadConversations();
 
+    // ===== SOCKET EVENT LISTENERS =====
     socket.on('receive-private-message', handleNewMessage);
     socket.on('new-message-notification', handleNotification);
     socket.on('new-group-notification', handleNewGroupNotification);
@@ -95,7 +97,8 @@ function MessagingApp({ socket, user, onLogout }) {
       socket.off('new-message-notification', handleNotification);
       socket.off('new-group-notification', handleNewGroupNotification);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket]);
 
   const loadConversations = async () => {
     try {
@@ -109,6 +112,7 @@ function MessagingApp({ socket, user, onLogout }) {
   };
 
   const handleNewMessage = (message) => {
+    // Reload conversations khi có tin nhắn mới
     loadConversations();
   };
 
@@ -118,7 +122,14 @@ function MessagingApp({ socket, user, onLogout }) {
   };
 
   const handleNewGroupNotification = (data) => {
-    console.log('Received new group notification:', data);
+    console.log('📢 Received new group notification:', data);
+    
+    // Show alert để user biết
+    if (data.groupName) {
+      console.log(`✅ Bạn đã được thêm vào nhóm "${data.groupName}"`);
+    }
+    
+    // Reload conversations NGAY LẬP TỨC
     loadConversations();
   };
 
@@ -145,10 +156,12 @@ function MessagingApp({ socket, user, onLogout }) {
     try {
       const response = await groupAPI.createGroup(groupData);
       if (response.data.success) {
-        loadConversations();
+        const newGroup = response.data.data;
+        
+        // Reload conversations
+        await loadConversations();
         
         // Auto-select group vừa tạo
-        const newGroup = response.data.data;
         setSelectedConversation({
           conversation_id: newGroup.conversation_id,
           conversation_type: 'group',
@@ -200,18 +213,10 @@ function MessagingApp({ socket, user, onLogout }) {
   };
 
   return (
-    <div 
-      className="messaging-app"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100vh',
-        overflow: 'hidden'
-      }}
-    >
+    <div className="messaging-app">
+      {/* ===== SIDEBAR WITH FIXED STRUCTURE ===== */}
       <div className="app-sidebar">
+        {/* HEADER - Fixed at top */}
         <div className="sidebar-header">
           <h2>💬 Chat</h2>
           <div className="header-actions">
@@ -240,6 +245,7 @@ function MessagingApp({ socket, user, onLogout }) {
           </div>
         </div>
 
+        {/* CONVERSATION LIST - Scrollable middle area */}
         <ConversationList
           conversations={conversations}
           selectedConversation={selectedConversation}
@@ -247,6 +253,7 @@ function MessagingApp({ socket, user, onLogout }) {
           currentUserId={currentUser.userId}
         />
 
+        {/* FOOTER - Fixed at bottom */}
         <div className="sidebar-footer">
           <div className="current-user-info">
             <div className="user-avatar-small">
@@ -258,7 +265,7 @@ function MessagingApp({ socket, user, onLogout }) {
               <div className="user-name-small">
                 {currentUser.displayName || currentUser.username}
               </div>
-              <div className="user-status-small">Online</div>
+              <div className="user-status-small">● Online</div>
             </div>
           </div>
           <button className="logout-btn-small" onClick={handleLogout} title="Đăng xuất">
@@ -267,6 +274,7 @@ function MessagingApp({ socket, user, onLogout }) {
         </div>
       </div>
 
+      {/* ===== MAIN CHAT AREA ===== */}
       <div className="app-main">
         <PrivateChatWindow
           socket={socket}
@@ -275,6 +283,7 @@ function MessagingApp({ socket, user, onLogout }) {
         />
       </div>
 
+      {/* ===== MODALS ===== */}
       {showUserList && (
         <UserList
           onSelectUser={handleSelectUser}

@@ -58,25 +58,28 @@ function CreateGroupModal({ socket, onClose, onCreate }) {
     try {
       setCreating(true);
       
-      // ===== AWAIT onCreate để nhận result =====
+      // ===== Gọi onCreate và nhận kết quả =====
       const result = await onCreate({
         groupName: groupName.trim(),
         memberIds: selectedMembers,
         description: description.trim()
       });
       
-      // ===== Emit socket event =====
+      // ===== Emit socket event NGAY SAU KHI TẠO THÀNH CÔNG =====
       if (socket && result && result.conversation_id) {
-        socket.emit('group-created', {
-          conversationId: result.conversation_id,
-          memberIds: selectedMembers,
-          groupName: groupName.trim()
+        console.log('Emitting group-created event to members:', selectedMembers);
+        
+        // Emit tới TỪNG thành viên cụ thể
+        selectedMembers.forEach(memberId => {
+          socket.emit('notify-new-group', {
+            conversationId: result.conversation_id,
+            groupName: groupName.trim(),
+            memberIds: selectedMembers,
+            targetUserId: memberId  // Gửi tới user cụ thể
+          });
         });
         
-        console.log('Emitted group-created event:', {
-          conversationId: result.conversation_id,
-          memberIds: selectedMembers
-        });
+        console.log('Group creation notifications sent successfully');
       }
       
       onClose();
