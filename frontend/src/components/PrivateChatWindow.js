@@ -17,19 +17,29 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
   const [showSearch, setShowSearch] = useState(false);
   const [showMedia, setShowMedia] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesAreaRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesAreaRef.current) {
+      messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
+    }
+  };
+  const scrollToBottomDelayed = (delay = 100) => {
+    setTimeout(() => {
+      scrollToBottom();
+    }, delay);
   };
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToBottomDelayed(100);
   }, [messages]);
 
   useEffect(() => {
     if (!conversation) return;
+
+    setMessages([]);
 
     loadMessages();
     conversationAPI.markAsRead(conversation.conversation_id).catch(console.error);
@@ -47,13 +57,15 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
       socket.off('message-reaction-update', handleReactionUpdate);
       socket.off('message-recalled', handleMessageRecalled);
     };
-  }, [conversation]);
+  }, [conversation?.conversation_id]);
 
   const loadMessages = async () => {
     try {
       const response = await conversationAPI.getMessages(conversation.conversation_id);
       if (response.data.success) {
         setMessages(response.data.data.messages);
+
+        scrollToBottomDelayed(150);
       }
     } catch (error) {
       console.error('Lỗi load messages:', error);
@@ -63,6 +75,8 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
   const handleReceiveMessage = (message) => {
     if (message.conversation_id === conversation.conversation_id) {
       setMessages(prev => [...prev, message]);
+
+      scrollToBottomDelayed(100);
       
       if (message.receiver_id === currentUser.userId) {
         conversationAPI.markAsRead(conversation.conversation_id).catch(console.error);
@@ -185,6 +199,8 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
     if (conversation?.conversation_id) {
       socket.emit('stop-typing', { conversationId: conversation.conversation_id });
     }
+
+    scrollToBottomDelayed(100);
   };
 
   const handleTyping = () => {
@@ -583,7 +599,7 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
         </div>
       </div>
 
-      <div className="messages-area">
+      <div className="messages-area" ref = {messagesAreaRef}>
         {messages.length === 0 ? (
           <div className="no-messages">
             <p>Chưa có tin nhắn nào</p>
