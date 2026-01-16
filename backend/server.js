@@ -193,7 +193,7 @@ io.on('connection', (socket) => {
           )
           OUTPUT 
             INSERTED.message_id, 
-            DATEADD(HOUR, 7, INSERTED.created_at) as created_at
+            INSERTED.created_at as created_at
           VALUES (
             @conversation_id, @sender_id, @receiver_id, @message_text, @message_type,
             @file_url, @file_name, @file_size, @file_type, @sender_id

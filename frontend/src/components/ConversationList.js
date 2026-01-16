@@ -25,20 +25,47 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
     }
   });
 
+  // ===== FIX TIMEZONE: Convert UTC to Vietnam Time =====
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
+    
+    // Parse timestamp as UTC
     const utcDate = new Date(timestamp);
-    const vnDate = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
+    
+    // Convert to Vietnam timezone (UTC+7)
+    const vnDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
+    
+    // Get current time in Vietnam
     const now = new Date();
-    const diffInMs = now - vnDate;
+    const nowVN = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+    
+    const diffInMs = nowVN - vnDate;
     const diffInMins = Math.floor(diffInMs / 60000);
     
+    // Less than 1 minute
     if (diffInMins < 1) return 'Vừa xong';
-    if (diffInMins < 60) return `${diffInMins} phút`;
-    if (diffInMins < 1440) return `${Math.floor(diffInMins / 60)} giờ`;
-    if (diffInMins < 10080) return `${Math.floor(diffInMins / 1440)} ngày`;
     
-    return vnDate.toLocaleDateString('vi-VN');
+    // Less than 60 minutes
+    if (diffInMins < 60) return `${diffInMins} phút`;
+    
+    // Less than 24 hours
+    if (diffInMins < 1440) {
+      const hours = Math.floor(diffInMins / 60);
+      return `${hours} giờ`;
+    }
+    
+    // Less than 7 days
+    if (diffInMins < 10080) {
+      const days = Math.floor(diffInMins / 1440);
+      return `${days} ngày`;
+    }
+    
+    // More than 7 days - show date
+    return vnDate.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   const truncateMessage = (text, maxLength = 40) => {
@@ -64,10 +91,6 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
 
   return (
     <div className="conversation-list">
-      <div className="conversation-list-header">
-        <h3>💬 Tin nhắn</h3>
-      </div>
-
       <div 
         className="conversation-items" 
         ref={conversationItemsRef}
