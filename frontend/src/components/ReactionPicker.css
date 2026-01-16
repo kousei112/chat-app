@@ -17,29 +17,54 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 100;
   animation: popIn 0.2s ease;
+  /* Prevent wrapping and ensure all icons are visible */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  /* Set explicit width to contain all 8 icons */
+  min-width: 320px;
+  justify-content: center;
 }
 
 @keyframes popIn {
   from {
     opacity: 0;
-    transform: scale(0.8);
+    transform: translateX(-50%) scale(0.8);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateX(-50%) scale(1);
   }
 }
 
 .picker-bottom {
-  bottom: -45px;
+  bottom: -50px;
   left: 50%;
   transform: translateX(-50%);
+  /* Ensure it stays centered */
+  margin-left: 0;
 }
 
 .picker-top {
-  top: -45px;
+  top: -50px;
   left: 50%;
   transform: translateX(-50%);
+  /* Ensure it stays centered */
+  margin-left: 0;
+}
+
+/* For received messages (left side) - adjust if needed */
+.message-wrapper.received .picker-bottom,
+.message-wrapper.received .picker-top {
+  left: 20%;
+  transform: translateX(0);
+}
+
+/* For sent messages (right side) - adjust if needed */
+.message-wrapper.sent .picker-bottom,
+.message-wrapper.sent .picker-top {
+  left: auto;
+  right: 0;
+  transform: translateX(0);
 }
 
 .reaction-btn {
@@ -54,6 +79,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0; /* Prevent buttons from shrinking */
 }
 
 .reaction-btn:hover {
@@ -63,4 +89,37 @@
 
 .reaction-btn:active {
   transform: scale(1.1);
+}
+
+/* Dark theme support */
+body.dark-theme .reaction-picker {
+  background: #2d2d2d;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-theme .reaction-btn:hover {
+  background: #3a3a3a;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .reaction-picker {
+    min-width: 300px;
+    padding: 6px 10px;
+    gap: 3px;
+  }
+  
+  .reaction-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+  
+  .picker-bottom {
+    bottom: -45px;
+  }
+  
+  .picker-top {
+    top: -45px;
+  }
 }

@@ -258,7 +258,14 @@ function PrivateChatWindow({ socket, conversation, currentUser }) {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
+    console.log('========== DEBUG TIMESTAMP ==========');
+    console.log('1. Raw timestamp:', timestamp);
+    console.log('2. typeof:', typeof timestamp);
     const date = new Date(timestamp);
+    console.log('3. Date object:', date);
+    console.log('4. UTC:', date.toUTCString());
+    console.log('5. VN timezone:', date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }));
+    console.log('=====================================');
     return date.toLocaleDateString('vi-VN', {
         timeZone: 'Asia/Ho_Chi_Minh',
         hour: '2-digit',

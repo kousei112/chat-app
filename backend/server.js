@@ -175,7 +175,12 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Lưu tin nhắn vào database
+      // ❌ CÁCH CŨ (SAI):
+      // Để GETDATE() tự lưu → SQL Server lưu theo local time của server (VN)
+      // Nhưng khi trả về JavaScript, nó tự động thêm 'Z' → Frontend hiểu nhầm là UTC
+      
+      // ✅ CÁCH MỚI (ĐÚNG):
+      // Lưu theo UTC thật sự bằng cách trừ đi 7 giờ
       const result = await pool.request()
         .input('conversation_id', sql.Int, conversationId)
         .input('sender_id', sql.Int, senderId)
@@ -215,6 +220,12 @@ io.on('connection', (socket) => {
 
       const sender = userInfo.recordset[0];
 
+      // ✅ FIX: Convert created_at về UTC thật sự trước khi gửi
+      // Trừ đi 7 giờ vì SQL Server đang lưu theo giờ VN
+      const utcDate = new Date(createdAt);
+      utcDate.setHours(utcDate.getHours() - 7);
+      const utcTimestamp = utcDate.toISOString();
+
       // Tạo message object
       const message = {
         message_id: messageId,
@@ -228,7 +239,7 @@ io.on('connection', (socket) => {
         file_size: fileSize || null,
         file_type: fileType || null,
         is_read: false,
-        created_at: createdAt,
+        created_at: utcTimestamp,  // ← Gửi UTC timestamp
         sender_username: sender.username,
         sender_display_name: sender.display_name,
         sender_full_name: sender.full_name,

@@ -216,40 +216,39 @@ router.get('/:conversationId/messages', authMiddleware, async (req, res) => {
         FETCH NEXT @limit ROWS ONLY
       `);
 
-    // Lấy reactions cho từng tin nhắn
-    const messageIds = messages.recordset.map(m => m.message_id);
-    let reactionsMap = {};
-
-    if (messageIds.length > 0) {
+    // ✅ FIX: Convert timestamps về UTC trước khi gửi cho frontend
+    const messagesWithReactions = await Promise.all(messages.recordset.map(async (msg) => {
+      // Convert created_at về UTC (trừ 7 giờ)
+      const utcDate = new Date(msg.created_at);
+      utcDate.setHours(utcDate.getHours() - 7);
+      
+      // Get reactions
+      let reactions = [];
       const reactionsResult = await pool.request()
+        .input('message_id', sql.Int, msg.message_id)
         .query(`
           SELECT 
-            message_id,
             emoji,
             COUNT(*) as count,
             STRING_AGG(CAST(user_id AS NVARCHAR(MAX)), ',') as user_ids
           FROM MessageReactions
-          WHERE message_id IN (${messageIds.join(',')})
-          GROUP BY message_id, emoji
+          WHERE message_id = @message_id
+          GROUP BY emoji
         `);
-
-      // Tạo map reactions theo message_id
-      reactionsResult.recordset.forEach(r => {
-        if (!reactionsMap[r.message_id]) {
-          reactionsMap[r.message_id] = [];
-        }
-        reactionsMap[r.message_id].push({
+      
+      if (reactionsResult.recordset.length > 0) {
+        reactions = reactionsResult.recordset.map(r => ({
           emoji: r.emoji,
           count: r.count,
           userIds: r.user_ids ? r.user_ids.split(',').map(id => parseInt(id)) : []
-        });
-      });
-    }
+        }));
+      }
 
-    // Thêm reactions vào messages
-    const messagesWithReactions = messages.recordset.map(msg => ({
-      ...msg,
-      reactions: reactionsMap[msg.message_id] || []
+      return {
+        ...msg,
+        created_at: utcDate.toISOString(),  // ← Convert sang ISO string (UTC)
+        reactions: reactions
+      };
     }));
 
     res.json({
@@ -267,6 +266,9 @@ router.get('/:conversationId/messages', authMiddleware, async (req, res) => {
     });
   }
 });
+
+
+
 
 // Đánh dấu tin nhắn đã đọc
 router.post('/:conversationId/mark-read', authMiddleware, async (req, res) => {
